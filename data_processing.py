@@ -1,9 +1,7 @@
 import tensorflow as tf
 from glob import glob
 import os
-
-SEED = 1122
-NUM_THREADS = 4
+import constants
 
 def read_normalize_resize_image(filename, img_height, img_width, channels):
     image_string = tf.read_file(filename)
@@ -26,9 +24,9 @@ def create_dataset(path, batch_size, img_height, img_width, channels, num_epochs
         filenames = glob(os.path.join(path, "*.jpg"))
         dataset = tf.data.Dataset.from_tensor_slices((filenames))
         dataset = dataset.repeat(num_epochs)
-        dataset = dataset.shuffle(buffer_size=len(filenames),seed = SEED)
-        dataset = dataset.map(lambda filename: read_normalize_resize_image(filename, img_height, img_width, channels), num_parallel_calls = NUM_THREADS)
-        dataset = dataset.map(train_preprocess, num_parallel_calls = NUM_THREADS)
+        dataset = dataset.shuffle(buffer_size=len(filenames),seed = constants.SEED)
+        dataset = dataset.map(lambda filename: read_normalize_resize_image(filename, img_height, img_width, channels), num_parallel_calls = constants.NUM_THREADS)
+        dataset = dataset.map(train_preprocess, num_parallel_calls = constants.NUM_THREADS)
         dataset = dataset.batch(batch_size)
         dataset = dataset.prefetch(1)
         return dataset
