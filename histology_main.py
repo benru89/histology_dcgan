@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
         # Model
         input_real, input_z, _ = model.model_inputs(DIM_X, DIM_Y, DIM_Z, Z_NOISE_DIM)
-        is_training = tf.placeholder(dtype=tf.bool, name='is_training')
+        is_training = tf.Variable(True, name='is_training')
         d_loss, g_loss = model.model_loss(input_real, input_z, DIM_Z, is_training)
         d_train_opt, g_train_opt = model.model_opt(d_loss, g_loss, LEARNING_RATE, BETA1)
 
