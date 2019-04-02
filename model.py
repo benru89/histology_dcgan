@@ -15,7 +15,7 @@ def model_inputs(image_width, image_height, image_channels, z_dim):
     input_z = tf.placeholder(tf.float32, [None, z_dim])
     learning_rate = tf.placeholder(tf.float32, [])
     return real_input_images, input_z, learning_rate
-    
+
 def model_loss(input_real, input_z, out_channel_dim,is_training, smooth_factor=0.1):
     """
     Get the loss for the discriminator and generator
