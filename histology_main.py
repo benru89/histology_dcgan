@@ -8,8 +8,7 @@ import argparse
 import configparser
 
 
-if __name__ == '__main__':
-
+def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("--z_file", help="z_noise_file")
     args = parser.parse_args()
@@ -34,6 +33,8 @@ if __name__ == '__main__':
 
         global_step = tf.Variable(0, trainable=False, name='global_step')
         increment_global_step = tf.assign_add(global_step,1, name = 'increment_global_step')
+        # names_to_vars = {v.op.name: v for v in tf.global_variables()}
+        # del names_to_vars["is_training"]
         saver = tf.train.Saver(max_to_keep = 20, keep_checkpoint_every_n_hours=2)
 
         with tf.Session() as sess:
@@ -73,8 +74,12 @@ if __name__ == '__main__':
                         train_loss_g = g_loss.eval({input_z: batch_z,is_training : True}, session = sess)
                         print("Epoch Step {}...".format(steps),"Discriminator Loss: {:.4f}...".format(train_loss_d),"Generator Loss: {:.4f}".format(train_loss_g))
                     if steps % SAVE_EXAMPLE_EVERY == 0:
-                        output.save_output(sess,z_batch_tensor,input_z,is_training,steps)
+                        output.save_output(sess, z_batch_tensor, input_z, is_training, steps)
                         
                 except tf.errors.OutOfRangeError:
                     print("End")
                     break
+
+if __name__ == '__main__':
+    run()
+    
