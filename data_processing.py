@@ -7,7 +7,7 @@ from PIL import Image
 import numpy as np
 from constants import SEED, NUM_THREADS
 
-def extract_patches(image, num_patches=10, patch_size=128):
+def extract_patches(image, patch_size, num_patches=10):
     """Get `num_patches` random crops from the image"""
     patches = []
     for i in range(num_patches):
@@ -46,21 +46,23 @@ def create_dataset(path, batch_size, img_height, img_width, channels, num_epochs
     """
     This function does blah blah.
     """
-    with tf.device('/cpu:0'):
-        convert_tiff_to_jpeg(path)
-        filenames = glob(os.path.join(path, "*.jpg"))
-        dataset = (tf.data.Dataset.from_tensor_slices((filenames))
-               .repeat(num_epochs)
-               .shuffle(buffer_size=len(filenames))
-               .map(lambda filename: read_image(
-                   filename, channels), num_parallel_calls=NUM_THREADS)
-               .map(lambda image: extract_patches(
-                   image, num_patches=20, patch_size=img_height), num_parallel_calls=NUM_THREADS)
-               .map(train_preprocess, num_parallel_calls=NUM_THREADS)
-               .apply(tf.data.experimental.unbatch())
-               .shuffle(buffer_size=len(filenames))
-               .batch(batch_size)
-               .prefetch(1))
+    
+    convert_tiff_to_jpeg(path)
+    filenames = glob(os.path.join(path, "*.jpg"))
+    dataset = (tf.data.Dataset.from_tensor_slices((filenames))
+                .repeat(num_epochs)
+                .shuffle(buffer_size=len(filenames))
+                .map(lambda filename: read_image(
+                    filename, channels), num_parallel_calls=NUM_THREADS)
+                .map(lambda image: extract_patches(
+                    image, num_patches=8, patch_size=512), num_parallel_calls=NUM_THREADS)
+                .map(train_preprocess, num_parallel_calls=NUM_THREADS)
+                .map(lambda image: tf.image.resize_images(
+                    image, [img_height, img_width]))
+                .apply(tf.data.experimental.unbatch())
+                .shuffle(buffer_size=len(filenames))
+                .batch(batch_size)
+                .prefetch(1))
 
     return dataset
 
