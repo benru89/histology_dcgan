@@ -6,17 +6,17 @@
             "dimZ" : 3
         },
         "input": {
-            "z_noise_dim" : 100,
-            "batch_size" : 32
+            "z_noise_dim" : 128,
+            "batch_size" : 4
         },
         "training": {
-            "num_epochs" : 1000, 
-            "learning_rate" : 0.00025,
+            "num_epochs" : 10000, 
+            "learning_rate" : 0.0002,
             "beta1" : 0.45
         },
         "save_model_every" : 1000,
-        "save_example_every" : 100,
-        "print_info_every" : 1000
+        "save_example_every" : 200,
+        "print_info_every" : 100
     }
   }
 
