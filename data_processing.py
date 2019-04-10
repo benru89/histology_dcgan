@@ -4,19 +4,24 @@ import os
 from os.path import isfile, join
 import tensorflow as tf
 from PIL import Image
-import numpy as np
-from constants import SEED, NUM_THREADS
+from constants import NUM_THREADS
 
-def extract_patches(image, patch_size, num_patches=10):
-    """Get `num_patches` random crops from the image"""
-    patches = []
-    for i in range(num_patches):
-        patch = tf.random_crop(image, [patch_size, patch_size, 3])
-        patches.append(patch)
+def extract_patches(image, patch_size):
+    """extract square patches of 'patch_size' from the image"""
 
-    patches = tf.stack(patches)
-    assert patches.get_shape().dims == [num_patches, patch_size, patch_size, 3]
-    return patches
+    height = patch_size
+    width = patch_size
+    strides_rows = 500
+    strides_cols = 500
+
+    # The size of sliding window
+    ksizes = [1, height, width, 1]
+    strides = [1, strides_rows, strides_cols, 1]
+    rates = [1, 1, 1, 1] # sample pixel consecutively
+
+    image = tf.expand_dims(image, 0)
+    image_patches = tf.extract_image_patches(image, ksizes, strides, rates, 'VALID')
+    return tf.reshape(image_patches, [-1, height, width, 3])
 
 
 def read_image(filename, channels):
@@ -28,16 +33,20 @@ def read_image(filename, channels):
     image = tf.image.convert_image_dtype(image, tf.float32)
     return image
 
+def random_transformation(image):
+    prob = tf.random_uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+    tf.cond(prob < 0.5, lambda: image, lambda: tf.image.central_crop(image, 0.3))
+    return image
+
+
 
 def train_preprocess(image):
     """
     This function does blah blah.
     """
-    image = tf.image.random_flip_left_right(image)
-    image = tf.image.random_flip_up_down(image)
-    image = tf.image.rot90(image, tf.random_uniform(shape=[], minval=0, maxval=4, dtype=tf.int32))
     #image = tf.image.random_brightness(image, max_delta=32.0 / 255.0)
-    #image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+    #image = tf.image.random_saturation(image, lower=0.75, upper=1.5)
+    #image = tf.image.random_contrast(image, lower=0.75, upper=1.5)
     image = tf.clip_by_value(image, 0.0, 1.0)
     return image
 
@@ -48,14 +57,20 @@ def create_dataset(path, batch_size, img_height, img_width, channels, num_epochs
     """
     
     convert_tiff_to_jpeg(path)
-    filenames = glob(os.path.join(path, "*.jpg"))
+    filenames = glob(os.path.join(path, "*.jpeg"))
+    filenames.extend(glob(os.path.join(path, "*.jpg")))
+    print(len(filenames))
     dataset = (tf.data.Dataset.from_tensor_slices((filenames))
                 .repeat(num_epochs)
                 .shuffle(buffer_size=len(filenames))
                 .map(lambda filename: read_image(
                     filename, channels), num_parallel_calls=NUM_THREADS)
                 .map(lambda image: extract_patches(
-                    image, num_patches=8, patch_size=512), num_parallel_calls=NUM_THREADS)
+                    image, patch_size=512), num_parallel_calls=NUM_THREADS)
+                .map(random_transformation)
+                .map(lambda image: tf.image.rot90(image, tf.random_uniform(shape=[], minval=0, maxval=4, dtype=tf.int32)))
+                .map(tf.image.random_flip_left_right)
+                .map(tf.image.random_flip_up_down)
                 .map(train_preprocess, num_parallel_calls=NUM_THREADS)
                 .map(lambda image: tf.image.resize_images(
                     image, [img_height, img_width]))
@@ -72,7 +87,7 @@ def convert_tiff_to_jpeg(path):
     """
     filenames = [f for f in os.listdir(path) if isfile(join(path, f))]
     for filename in filenames:
-        if os.path.splitext(filename)[1].lower() == ".tif":
+        if os.path.splitext(filename)[1].lower() == ".tif" or os.path.splitext(filename)[1].lower() == ".png":
             if os.path.isfile(os.path.splitext(os.path.join(path, filename))[0] + ".jpg"):
                 print("A jpeg file already exists for %s" % filename)
             else:
