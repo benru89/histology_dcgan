@@ -1,5 +1,5 @@
 import tensorflow as tf
-from dcgan import discriminator, generator, lrelu 
+from dcgan import discriminator, generator 
 
 
 def model_inputs(image_width, image_height, image_channels, z_dim):
@@ -25,15 +25,15 @@ def model_loss(input_real, input_z, out_channel_dim,is_training, smooth_factor=0
     :return: A tuple of (discriminator loss, generator loss)
     """
     d_model_real, d_logits_real = discriminator(input_real)
-    d_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_real,labels=tf.ones_like(d_model_real) * (1 - smooth_factor)))
-    input_fake = generator(input_z, out_channel_dim,is_training)
-    d_model_fake, d_logits_fake = discriminator(input_fake, reuse=True)
+    d_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_real, labels=tf.ones_like(d_model_real) * (1 - smooth_factor)))
+    input_fake = generator(input_z, out_channel_dim, is_training)
+    d_model_fake, d_logits_fake = discriminator(input_fake)
     d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_fake, labels=tf.zeros_like(d_model_fake)))    
     g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_fake, labels=tf.ones_like(d_model_fake)))
 
     return d_loss_real + d_loss_fake, g_loss
 
-def model_opt(d_loss, g_loss, learning_rate, beta1):
+def model_opt(d_loss, g_loss, d_learning_rate, g_learning_rate, beta1):
     """
     Get optimization operations
     :param d_loss: Discriminator loss Tensor
@@ -50,7 +50,7 @@ def model_opt(d_loss, g_loss, learning_rate, beta1):
 
     # Optimize
     with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-        d_train_opt = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
-        g_train_opt = tf.train.AdamOptimizer(learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
+        d_train_opt = tf.train.AdamOptimizer(d_learning_rate, beta1=beta1).minimize(d_loss, var_list=d_vars)
+        g_train_opt = tf.train.AdamOptimizer(g_learning_rate, beta1=beta1).minimize(g_loss, var_list=g_vars)
 
     return d_train_opt, g_train_opt
