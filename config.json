@@ -1,23 +1,23 @@
 {
     "default_config": {
         "output": {
-            "dimX" : 128, 
-            "dimY" : 128, 
+            "dimX" : 256, 
+            "dimY" : 256, 
             "dimZ" : 3
         },
         "input": {
-            "z_noise_dim" : 128,
-            "batch_size" : 16
+            "z_noise_dim" : 256,
+            "batch_size" : 32
         },
         "training": {
             "num_epochs" : 10000, 
-            "d_learning_rate" : 0.00005,
-            "g_learning_rate" : 0.0005,
+            "d_learning_rate" : 0.0002,
+            "g_learning_rate" : 0.0002,
             "beta1" : 0.5
         },
-        "save_model_every" : 1000,
-        "save_example_every" : 200,
-        "print_info_every" : 100
+        "save_model_every" : 200,
+        "save_example_every" : 100,
+        "print_info_every" : 1
     }
   }
 
