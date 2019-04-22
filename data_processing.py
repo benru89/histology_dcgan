@@ -6,6 +6,46 @@ import tensorflow as tf
 from PIL import Image
 from constants import NUM_THREADS
 
+
+
+def read_image(filename, channels):
+    """
+    This function does blah blah.
+    """
+    image_string = tf.read_file(filename)
+    image = tf.image.decode_jpeg(image_string, channels=channels)
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    image = tf.image.random_flip_left_right(image)
+    image = tf.subtract(image, 0.5)
+    image = tf.multiply(image, 2.0)
+    return image
+
+
+def random_transformation(image):
+    prob = tf.random_uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
+    tf.cond(prob < 0.5, lambda: image, lambda: tf.image.central_crop(image, 0.3))
+    return image
+
+
+def create_dataset(path, batch_size, img_height, img_width, channels, num_epochs):
+    """
+    This function does blah blah.
+    """
+    
+    convert_tiff_to_jpeg(path)
+    filenames = glob(os.path.join(path, "*.jpeg"))
+    filenames.extend(glob(os.path.join(path, "*.jpg")))
+    dataset = (tf.data.Dataset.from_tensor_slices((filenames))
+                .repeat(num_epochs)
+                .shuffle(buffer_size=len(filenames))
+                .map(lambda filename: read_image(
+                    filename, channels), num_parallel_calls=NUM_THREADS)
+                .batch(batch_size)
+                .prefetch(1))
+
+    return dataset, len(filenames)
+
+
 def extract_patches(image, patch_size):
     """extract square patches of 'patch_size' from the image"""
 
@@ -23,63 +63,6 @@ def extract_patches(image, patch_size):
     image_patches = tf.extract_image_patches(image, ksizes, strides, rates, 'VALID')
     return tf.reshape(image_patches, [-1, height, width, 3])
 
-
-def read_image(filename, channels):
-    """
-    This function does blah blah.
-    """
-    image_string = tf.read_file(filename)
-    image = tf.image.decode_jpeg(image_string, channels=channels)
-    image = tf.image.convert_image_dtype(image, tf.float32)
-    return image
-
-def random_transformation(image):
-    prob = tf.random_uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
-    tf.cond(prob < 0.5, lambda: image, lambda: tf.image.central_crop(image, 0.3))
-    return image
-
-
-
-def train_preprocess(image):
-    """
-    This function does blah blah.
-    """
-    #image = tf.image.random_brightness(image, max_delta=32.0 / 255.0)
-    #image = tf.image.random_saturation(image, lower=0.75, upper=1.5)
-    #image = tf.image.random_contrast(image, lower=0.75, upper=1.5)
-    image = tf.clip_by_value(image, 0.0, 1.0)
-    return image
-
-
-def create_dataset(path, batch_size, img_height, img_width, channels, num_epochs):
-    """
-    This function does blah blah.
-    """
-    
-    convert_tiff_to_jpeg(path)
-    filenames = glob(os.path.join(path, "*.jpeg"))
-    filenames.extend(glob(os.path.join(path, "*.jpg")))
-    print(len(filenames))
-    dataset = (tf.data.Dataset.from_tensor_slices((filenames))
-                .repeat(num_epochs)
-                .shuffle(buffer_size=len(filenames))
-                .map(lambda filename: read_image(
-                    filename, channels), num_parallel_calls=NUM_THREADS)
-                .map(lambda image: extract_patches(
-                    image, patch_size=512), num_parallel_calls=NUM_THREADS)
-                .map(random_transformation)
-                .map(lambda image: tf.image.rot90(image, tf.random_uniform(shape=[], minval=0, maxval=4, dtype=tf.int32)))
-                .map(tf.image.random_flip_left_right)
-                .map(tf.image.random_flip_up_down)
-                .map(train_preprocess, num_parallel_calls=NUM_THREADS)
-                .map(lambda image: tf.image.resize_images(
-                    image, [img_height, img_width]))
-                .apply(tf.data.experimental.unbatch())
-                .shuffle(buffer_size=len(filenames))
-                .batch(batch_size)
-                .prefetch(1))
-
-    return dataset
 
 def convert_tiff_to_jpeg(path):
     """
