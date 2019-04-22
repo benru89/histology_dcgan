@@ -5,7 +5,7 @@ SEED = 11
 NUM_THREADS = 4
 
 BASE_PATH = '/home/ruben/Master/'
-DATA_PATH = 'datasets/mixed/'
+DATA_PATH = 'datasets/negative_patches'
 CHKPTS_PATH = 'checkpoints/'
 GRAPHS_PATH = 'graphs/'
 OUTPUT_PATH = 'output/'
@@ -20,7 +20,7 @@ DIM_Y = CONFIG['output']['dimY']
 DIM_Z = CONFIG['output']['dimZ']
 
 BATCH_SIZE = CONFIG['input']['batch_size']
-Z_NOISE_DIM = CONFIG['input']['batch_size']
+Z_NOISE_DIM = CONFIG['input']['z_noise_dim']
 
 NUM_EPOCHS = CONFIG['training']['num_epochs']
 D_LEARNING_RATE = CONFIG['training']['d_learning_rate']
