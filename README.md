@@ -1,2 +1,2 @@
 # histology_dcgan
-Arithmetic operations on histology synthetic images generated using a DCGAN
+Arithmetic operations on synthetic histology images generated using a DCGAN
