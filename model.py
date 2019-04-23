@@ -13,8 +13,7 @@ def model_inputs(image_width, image_height, image_channels, z_dim):
     """
     real_input_images = tf.placeholder(tf.float32, [None, image_width, image_height, image_channels])
     input_z = tf.placeholder(tf.float32, [None, z_dim])
-    learning_rate = tf.placeholder(tf.float32, [])
-    return real_input_images, input_z, learning_rate
+    return real_input_images, input_z
 
 def model_loss(input_real, input_z, out_channel_dim, smooth_factor=0.1):
     """
