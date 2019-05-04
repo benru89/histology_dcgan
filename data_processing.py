@@ -15,16 +15,20 @@ def read_image(filename, channels):
     image_string = tf.read_file(filename)
     image = tf.image.decode_jpeg(image_string, channels=channels)
     image = tf.image.convert_image_dtype(image, tf.float32)
-    image = tf.image.random_flip_left_right(image)
+    
+    # image = tf.image.random_flip_left_right(image)
+    # image = tf.image.random_flip_up_down(image)
+    # image = random_rotation(image)
+    # image = tf.image.resize_images(image, [128,128])
     image = tf.subtract(image, 0.5)
     image = tf.multiply(image, 2.0)
     return image
 
 
-def random_transformation(image):
-    prob = tf.random_uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
-    tf.cond(prob < 0.5, lambda: image, lambda: tf.image.central_crop(image, 0.3))
-    return image
+def random_rotation(image):
+    k = tf.random_uniform(shape=[], minval=0, maxval=3, dtype=tf.int32)
+
+    return tf.image.rot90(image, k)
 
 
 def create_dataset(path, batch_size, img_height, img_width, channels, num_epochs):
@@ -40,6 +44,7 @@ def create_dataset(path, batch_size, img_height, img_width, channels, num_epochs
                 .shuffle(buffer_size=len(filenames))
                 .map(lambda filename: read_image(
                     filename, channels), num_parallel_calls=NUM_THREADS)
+                
                 .batch(batch_size)
                 .prefetch(1))
 
