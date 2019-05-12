@@ -1,4 +1,6 @@
 {
+    "active_config" : "positive_config",
+
     "default_config": {
         "output": {
             "dimX" : 256, 
@@ -10,14 +12,45 @@
             "batch_size" : 32
         },
         "training": {
-            "num_epochs" : 10000, 
+            "num_epochs" : 50, 
             "d_learning_rate" : 0.0002,
             "g_learning_rate" : 0.0002,
             "beta1" : 0.5
         },
-        "save_model_every" : 200,
-        "save_example_every" : 100,
-        "print_info_every" : 1
+        "base_path" : "/home/ruben/Master/",
+        "data_path" : "datasets/camelyon_17_16",
+        "chkpts_path" : "checkpoints/",
+        "graphs_path" : "graphs",
+        "output_path" : "output",
+        "save_model_every" : 1000,
+        "save_example_every" : 2500,
+        "print_info_every" : 10
+    },
+
+    "positive_config": {
+        "output": {
+            "dimX" : 256, 
+            "dimY" : 256, 
+            "dimZ" : 3
+        },
+        "input": {
+            "z_noise_dim" : 256,
+            "batch_size" : 32
+        },
+        "training": {
+            "num_epochs" : 50, 
+            "d_learning_rate" : 0.0002,
+            "g_learning_rate" : 0.0002,
+            "beta1" : 0.5
+        },
+        "base_path" : "/home/ruben/Master/",
+        "data_path" : "datasets/all_positive",
+        "chkpts_path" : "checkpoints_positive/",
+        "graphs_path" : "graphs",
+        "output_path" : "output_positive/",
+        "save_model_every" : 1000,
+        "save_example_every" : 2500,
+        "print_info_every" : 10
     }
   }
 

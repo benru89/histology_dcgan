@@ -1,19 +1,20 @@
 """This module does blah blah."""
 import json
 
-SEED = 11
-NUM_THREADS = 4
-
-BASE_PATH = '/home/ruben/Master/'
-DATA_PATH = 'datasets/negative_patches'
-CHKPTS_PATH = 'checkpoints/'
-GRAPHS_PATH = 'graphs/'
-OUTPUT_PATH = 'output/'
+SEED = 12
+NUM_THREADS = 8
 
 with open('config.json', 'r') as f:
     CONFIG_JSON = json.load(f)
 
-CONFIG = CONFIG_JSON['default_config']
+CONFIG = CONFIG_JSON[CONFIG_JSON['active_config']]
+
+BASE_PATH = CONFIG['base_path']
+DATA_PATH = CONFIG['data_path']
+CHKPTS_PATH = CONFIG['chkpts_path']
+GRAPHS_PATH = CONFIG['graphs_path']
+OUTPUT_PATH = CONFIG['output_path']
+FULL_OUTPUT_PATH = BASE_PATH + OUTPUT_PATH
 
 DIM_X = CONFIG['output']['dimX']
 DIM_Y = CONFIG['output']['dimY']
