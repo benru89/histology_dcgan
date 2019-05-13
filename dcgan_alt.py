@@ -133,7 +133,7 @@ def generator(z):
         return tf.nn.tanh(h4)
 
 
-def sampler(z):
+def sampler(z, batch_size=BATCH_SIZE):
     gf_dim = 64
     with tf.variable_scope("generator") as scope:
         scope.reuse_variables()
@@ -149,15 +149,15 @@ def sampler(z):
             [-1, s_h16, s_w16, gf_dim * 8])
         h0 = tf.nn.relu(g_bn0(h0, train=False))
 
-        h1 = deconv2d(h0, [BATCH_SIZE, s_h8, s_w8, gf_dim*4], name='g_h1')
+        h1 = deconv2d(h0, [batch_size, s_h8, s_w8, gf_dim*4], name='g_h1')
         h1 = tf.nn.relu(g_bn1(h1, train=False))
 
-        h2 = deconv2d(h1, [BATCH_SIZE, s_h4, s_w4, gf_dim*2], name='g_h2')
+        h2 = deconv2d(h1, [batch_size, s_h4, s_w4, gf_dim*2], name='g_h2')
         h2 = tf.nn.relu(g_bn2(h2, train=False))
 
-        h3 = deconv2d(h2, [BATCH_SIZE, s_h2, s_w2, gf_dim*1], name='g_h3')
+        h3 = deconv2d(h2, [batch_size, s_h2, s_w2, gf_dim*1], name='g_h3')
         h3 = tf.nn.relu(g_bn3(h3, train=False))
 
-        h4 = deconv2d(h3, [BATCH_SIZE, s_h, s_w, DIM_Z], name='g_h4')
+        h4 = deconv2d(h3, [batch_size, s_h, s_w, DIM_Z], name='g_h4')
 
     return tf.nn.tanh(h4)
