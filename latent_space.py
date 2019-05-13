@@ -47,12 +47,13 @@ def search(sess,tensor, save_tensor=False):
     return zp, zp_val
 
 def interpolate(sess, tensor_a, tensor_b):
-    z = tf.Variable(np.empty(shape=(STEPS, Z_NOISE_DIM)), dtype=tf.float32)
+    z = np.empty(shape=(STEPS, Z_NOISE_DIM))
     for i, alpha in enumerate(np.linspace(start=0.0, stop=1.0, num=STEPS)):
-       z[i] = (1 - alpha) * tensor_a + alpha * tensor_b
+       z[i] = (1-alpha) * tensor_a + alpha * tensor_b
 
-    fzp = sampler(z)
-    samples = sess.run(fzp)
+    z_ = tf.placeholder(tf.float32, [None, Z_NOISE_DIM])
+
+    samples = sess.run(sampler(z_),feed_dict={z_: z})
     imgs = [img[:, :, :] for img in samples]
     for i, image in enumerate(imgs):
         filepath = FULL_OUTPUT_PATH + 'interp_' + str(i) + '.png'
