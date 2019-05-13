@@ -1,5 +1,5 @@
 {
-    "active_config" : "positive_config",
+    "active_config" : "default_config",
 
     "default_config": {
         "output": {
@@ -18,10 +18,10 @@
             "beta1" : 0.5
         },
         "base_path" : "/home/ruben/Master/",
-        "data_path" : "datasets/camelyon_17_16",
-        "chkpts_path" : "checkpoints/",
+        "data_path" : "datasets/camelyon_16_level1",
+        "chkpts_path" : "checkpoints_level1/",
         "graphs_path" : "graphs",
-        "output_path" : "output",
+        "output_path" : "output/",
         "save_model_every" : 1000,
         "save_example_every" : 2500,
         "print_info_every" : 10
