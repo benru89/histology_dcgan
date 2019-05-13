@@ -3,7 +3,7 @@ from dcgan_alt import discriminator, generator
 from constants import BATCH_SIZE
 
 
-def model_inputs(image_width, image_height, image_channels, z_dim):
+def model_inputs(image_width, image_height, image_channels, z_dim, batch_size = BATCH_SIZE):
     """
     Create the model inputs
     :param image_width: The input image width
@@ -12,7 +12,7 @@ def model_inputs(image_width, image_height, image_channels, z_dim):
     :param z_dim: The dimension of Z
     :return: Tuple of (tensor of real input images, tensor of z data, learning rate)
     """
-    real_input_images = tf.placeholder(tf.float32, [BATCH_SIZE] + [image_width, image_height, image_channels], name='real_images')
+    real_input_images = tf.placeholder(tf.float32, [batch_size] + [image_width, image_height, image_channels], name='real_images')
     input_z = tf.placeholder(tf.float32, [None, z_dim])
     return real_input_images, input_z
 
