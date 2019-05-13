@@ -19,6 +19,30 @@ def transform_image(image):
     return image
 
 
+def save_images(imgs_batch, curr_batch=1, stepcount=None, name_prefix=None):
+    for i, image in enumerate(imgs_batch):
+        filepath = FULL_OUTPUT_PATH
+        if stepcount:
+            filepath += str(stepcount)
+        elif name_prefix:
+            filepath += str(name_prefix)
+        filepath += "_" + str(curr_batch) + "_" + str(i) + '.png'
+        output_image = Image.fromarray(transform_image(
+            image_from_array(image)).astype(np.uint8))
+        output_image.save(filepath)
+
+
+def save_tensors(z_batch, curr_batch=1, stepcount=None, name_prefix=None):
+    for i, ex in enumerate(z_batch):
+        filepath = FULL_OUTPUT_PATH
+        if stepcount:
+            filepath += str(stepcount)
+        elif name_prefix:
+            filepath += str(name_prefix)
+        filepath += "_" + str(curr_batch) + "_" + str(i) + '.txt'
+        np.savetxt(filepath, ex, fmt='%1.25f')
+
+
 def save_mosaic_output(sess, z_batch_tensor, input_z, steps, save_tensor=False):
     """
     This function does blah blah.
@@ -41,11 +65,6 @@ def save_mosaic_output(sess, z_batch_tensor, input_z, steps, save_tensor=False):
         os.mkdir(FULL_OUTPUT_PATH)
     fig.savefig(FULL_OUTPUT_PATH + str(steps) + '_mosaic.png')
     plt.close('all')
-    if save_tensor:
-        with open(FULL_OUTPUT_PATH + str(steps) + '_tensor.txt', 'w') as fout:
-            for row in range(example_z.shape[0]):
-                for col in range(example_z.shape[1]):
-                    fout.write(str(example_z[row, col]) + " ")
 
 
 def save_output(sess, z_batch_tensor, input_z, steps, num_samples=1, save_tensor=False):
@@ -56,38 +75,22 @@ def save_output(sess, z_batch_tensor, input_z, steps, num_samples=1, save_tensor
     samples = sess.run(sampler(input_z),
                        feed_dict={input_z: example_z})
     imgs = [img[:, :, :] for img in samples]
-    for i in range(num_samples):
-        filepath = FULL_OUTPUT_PATH + str(steps) + '_output' + str(i) + '.png'
-        output_image = Image.fromarray(transform_image(
-            image_from_array(imgs[i])).astype(np.uint8))
-        output_image.save(filepath)
+    if num_samples > BATCH_SIZE:
+        num_samples = BATCH_SIZE
+    save_images(imgs, num_samples, stepcount=steps)
     if save_tensor:
-        for ex in range(example_z.shape[0]):
-            with open(FULL_OUTPUT_PATH + str(steps) + str(ex) + '_tensor.txt', 'w') as fout:
-                for col in range(example_z.shape[1]):
-                    fout.write(str(example_z[ex, col]) + " ")
+        save_tensors(example_z)
 
 
-def generate_samples(sess, z_batch_tensor, input_z, steps, num_samples, save_tensor=False, name_prefix="output"):
+def generate_samples(sess, z_batch_tensor, input_z, num_samples, save_tensor=False, name_prefix="output"):
     """
     This function does blah blah.
     """
-    num_batches = num_samples // BATCH_SIZE + 1
-    imgs_per_batch = BATCH_SIZE
-    for i in range(num_batches):
+    num_batches = num_samples // BATCH_SIZE
+    for batch_count in range(num_batches):
         example_z = sess.run(z_batch_tensor)
         samples = sess.run(sampler(input_z), feed_dict={input_z: example_z})
         imgs = [img[:, :, :] for img in samples]
-        if (i == num_batches):
-            imgs_per_batch = num_samples % BATCH_SIZE
-        for j in range(imgs_per_batch):
-            filepath = FULL_OUTPUT_PATH + \
-                str(steps) + name_prefix + str(i) + "_" + str(j) + '.png'
-            output_image = Image.fromarray(transform_image(
-                image_from_array(imgs[j])).astype(np.uint8))
-            output_image.save(filepath)
+        save_images(imgs, batch_count, name_prefix=name_prefix)
         if save_tensor:
-            for ex in range(example_z.shape[0]):
-                filepath_txt = FULL_OUTPUT_PATH + \
-                    str(steps) + name_prefix + str(i) + "_" + str(ex) + '.txt'
-                np.savetxt(filepath_txt, example_z[ex], fmt='%1.25f')
+            save_tensors(example_z, batch_count, name_prefix=name_prefix)
