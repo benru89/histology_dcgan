@@ -27,8 +27,8 @@ def run():
     if args.out_prefix and (args.generate is None):
         parser.error("--out_prefix requires --generate")
     if args.out_prefix == None:
-      args.out_prefix = "output"
-      
+        args.out_prefix = "output"
+
     # Seed for reproducibility
     tf.set_random_seed(SEED)
 
@@ -37,15 +37,27 @@ def run():
         BASE_PATH + DATA_PATH, BATCH_SIZE, DIM_X, DIM_Y, DIM_Z, NUM_EPOCHS)
     iterator = dataset.make_initializable_iterator()
 
-    # Model
-    input_real, input_z = model.model_inputs(DIM_X, DIM_Y, DIM_Z, Z_NOISE_DIM)
-    d_loss, g_loss = model.model_loss(input_real, input_z)
-    d_train_opt, g_train_opt = model.model_opt(
-        d_loss, g_loss, D_LEARNING_RATE, G_LEARNING_RATE, BETA1)
-
     global_step = tf.Variable(0, trainable=False, name='global_step')
     increment_global_step = tf.assign_add(
         global_step, 1, name='increment_global_step')
+
+    # Model
+    input_real, input_z = model.model_inputs(DIM_X, DIM_Y, DIM_Z, Z_NOISE_DIM)
+    total_steps = (dataset_len / BATCH_SIZE) * NUM_EPOCHS
+    starter_stdev = 0.1
+
+    ##decayed_learning_rate = learning_rate * decay_rate ^ (global_step / decay_steps)
+    decaying_stdev = tf.train.exponential_decay(
+        starter_stdev, global_step, total_steps, 0.0001)
+    
+    decaying_noise = tf.random_normal(shape=tf.shape(
+        input_real), mean=0.0, stddev=decaying_stdev, dtype=tf.float32)
+    tf.summary.scalar("stdev", tf.keras.backend.std(decaying_noise), collections=["d_summ"])
+    d_loss, g_loss = model.model_loss(
+        input_real, input_z, decaying_noise=decaying_noise)
+    d_train_opt, g_train_opt = model.model_opt(
+        d_loss, g_loss, D_LEARNING_RATE, G_LEARNING_RATE, BETA1)
+
     z_batch_tensor = tf.random.uniform(
         (BATCH_SIZE, Z_NOISE_DIM), dtype=tf.float32, minval=-1, maxval=1)
 
@@ -83,12 +95,14 @@ def get_session(batch_size):
       Returns an open tf session from last valid checkpoint. Useful to use a saved trained model.
       ie. use this function in a Jupyter notebook to create a session.
     """
-    #Dataset
-    dataset, dataset_len = data.create_dataset(BASE_PATH + DATA_PATH, BATCH_SIZE, DIM_X, DIM_Y, DIM_Z, NUM_EPOCHS)
+    # Dataset
+    dataset, dataset_len = data.create_dataset(
+        BASE_PATH + DATA_PATH, BATCH_SIZE, DIM_X, DIM_Y, DIM_Z, NUM_EPOCHS)
     iterator = dataset.make_initializable_iterator()
-   
-    #Model
-    input_real, input_z = model.model_inputs(DIM_X, DIM_Y, DIM_Z, Z_NOISE_DIM, batch_size)
+
+    # Model
+    input_real, input_z = model.model_inputs(
+        DIM_X, DIM_Y, DIM_Z, Z_NOISE_DIM, batch_size)
     dcgan.generator(input_z)
     global_step = tf.Variable(0, trainable=False, name='global_step')
     saver = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)

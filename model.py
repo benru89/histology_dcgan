@@ -16,7 +16,7 @@ def model_inputs(image_width, image_height, image_channels, z_dim, batch_size = 
     input_z = tf.placeholder(tf.float32, [None, z_dim])
     return real_input_images, input_z
 
-def model_loss(input_real, input_z, smooth_factor=0.1):
+def model_loss(input_real, input_z, smooth_factor=0.1, decaying_noise=None):
     """
     Get the loss for the discriminator and generator
     :param input_real: Images from the real dataset
@@ -25,10 +25,10 @@ def model_loss(input_real, input_z, smooth_factor=0.1):
     :return: A tuple of (discriminator loss, generator loss)
     """
     fake_samples = generator(input_z)
-    tf.summary.image("G", fake_samples, max_outputs=5, collections=["g_summ"])
+    tf.summary.image("G", fake_samples, max_outputs=2, collections=["g_summ"])
 
-    d_model_real, d_logits_real = discriminator(input_real, reuse=False)
-    d_model_fake, d_logits_fake = discriminator(fake_samples, reuse=True)
+    d_model_real, d_logits_real = discriminator(input_real, reuse=False, decaying_noise=decaying_noise)
+    d_model_fake, d_logits_fake = discriminator(fake_samples, reuse=True,  decaying_noise=decaying_noise)
         
     d_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_real, labels=tf.ones_like(d_model_real) * (1 - smooth_factor)))
     d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_fake, labels=tf.zeros_like(d_model_fake)))    
