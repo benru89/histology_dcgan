@@ -1,7 +1,7 @@
 {
-    "active_config" : "default_config",
+    "active_config" : "camelyon_17_16_level0",
 
-    "default_config": {
+    "camelyon_17_16_level1": {
         "output": {
             "dimX" : 256, 
             "dimY" : 256, 
@@ -12,22 +12,22 @@
             "batch_size" : 32
         },
         "training": {
-            "num_epochs" : 50, 
+            "num_epochs" : 60, 
             "d_learning_rate" : 0.0002,
             "g_learning_rate" : 0.0002,
             "beta1" : 0.5
         },
         "base_path" : "/home/ruben/Master/",
-        "data_path" : "datasets/camelyon_16_level1",
-        "chkpts_path" : "checkpoints_level1/",
-        "graphs_path" : "graphs",
-        "output_path" : "output/",
+        "data_path" : "datasets/camelyon_17_16_level1",
+        "chkpts_path" : "camelyon_17_16_level1/checkpoints/",
+        "graphs_path" : "camelyon_17_16_level1/graphs",
+        "output_path" : "camelyon_17_16_level1/output/",
         "save_model_every" : 1000,
         "save_example_every" : 2500,
         "print_info_every" : 10
     },
 
-    "positive_config": {
+    "camelyon_17_16_level0": {
         "output": {
             "dimX" : 256, 
             "dimY" : 256, 
@@ -38,16 +38,16 @@
             "batch_size" : 32
         },
         "training": {
-            "num_epochs" : 50, 
+            "num_epochs" : 100, 
             "d_learning_rate" : 0.0002,
             "g_learning_rate" : 0.0002,
             "beta1" : 0.5
         },
         "base_path" : "/home/ruben/Master/",
-        "data_path" : "datasets/all_positive",
-        "chkpts_path" : "checkpoints_positive/",
-        "graphs_path" : "graphs",
-        "output_path" : "output_positive/",
+        "data_path" : "datasets/camelyon_17_16_level0",
+        "chkpts_path" : "camelyon_17_16_level0/checkpoints/",
+        "graphs_path" : "camelyon_17_16_level0/graphs",
+        "output_path" : "camelyon_17_16_level0/output/",
         "save_model_every" : 1000,
         "save_example_every" : 2500,
         "print_info_every" : 10
