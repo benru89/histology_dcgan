@@ -9,6 +9,6 @@ test_images/histo_l0/operations/
 test_images/histo_l1/evaluation/*
 test_images/histo_l1/interpolation/*
 test_images/histo_l1/operations/*
-evaluation/trained_models/*
+
 .ipynb_checkpoints
 
