@@ -1,1 +1,13 @@
 __pycache__/
+example_images/fake/*
+example_images/real/*
+test_images/faces/fake/*
+test_images/faces/operations/
+test_images/histo_l0/evaluation/*
+test_images/histo_l0/interpolation/*
+test_images/histo_l0/operations/
+test_images/histo_l1/evaluation/*
+test_images/histo_l1/interpolation/*
+test_images/histo_l1/operations/*
+.ipynb_checkpoints
+
