@@ -4,7 +4,7 @@ import os
 from os.path import isfile, join
 import tensorflow as tf
 from PIL import Image
-from constants import NUM_THREADS
+from constants import NUM_THREADS, DIM_X, DIM_Y, DIM_Z
 
 
 
@@ -19,7 +19,11 @@ def read_image(filename, channels):
     # image = tf.image.random_flip_left_right(image)
     # image = tf.image.random_flip_up_down(image)
     # image = random_rotation(image)
-    # image = tf.image.resize_images(image, [128,128])
+    #celebA
+    if (DIM_X != 256):
+      image = tf.expand_dims(image, 0)
+      image = tf.image.resize_bilinear(image, [128,128])
+      image = tf.squeeze(image, 0)
     image = tf.subtract(image, 0.5)
     image = tf.multiply(image, 2.0)
     return image
@@ -37,8 +41,11 @@ def create_dataset(path, batch_size, img_height, img_width, channels, num_epochs
     """
     
     convert_tiff_to_jpeg(path)
-    filenames = glob(os.path.join(path, "*.jpeg"))
-    filenames.extend(glob(os.path.join(path, "*.jpg")))
+    #celebA
+    #filenames = glob(os.path.join(path, "*.jpeg"))
+    #filenames.extend(glob(os.path.join(path, "*.jpg")))
+    filenames = glob(os.path.join(path, "**/*.jpeg"))
+    filenames.extend(glob(os.path.join(path, "**/*.jpg")))
     dataset = (tf.data.Dataset.from_tensor_slices((filenames))
                 .repeat(num_epochs)
                 .shuffle(buffer_size=len(filenames))
