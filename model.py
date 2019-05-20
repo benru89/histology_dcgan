@@ -25,7 +25,7 @@ def model_loss(input_real, input_z, smooth_factor=0.1, decaying_noise=None):
     :return: A tuple of (discriminator loss, generator loss)
     """
     fake_samples = generator(input_z)
-    tf.summary.image("G", fake_samples, max_outputs=2, collections=["g_summ"])
+    tf.summary.image("G", fake_samples, max_outputs=2, collections=["g_imgs"])
 
     d_model_real, d_logits_real = discriminator(input_real, reuse=False, decaying_noise=decaying_noise)
     d_model_fake, d_logits_fake = discriminator(fake_samples, reuse=True,  decaying_noise=decaying_noise)
