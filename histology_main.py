@@ -11,7 +11,7 @@ import dcgan_alt as dcgan
 import latent_space
 from constants import (SEED, BATCH_SIZE, Z_NOISE_DIM, DIM_X, DIM_Y, DIM_Z, NUM_EPOCHS,
                        BASE_PATH, DATA_PATH, D_LEARNING_RATE, G_LEARNING_RATE, BETA1, OUTPUT_PATH,
-                       SAVE_MODEL_EVERY, PRINT_INFO_EVERY, CHKPTS_PATH, SAVE_EXAMPLE_EVERY, GRAPHS_PATH)
+                       SAVE_MODEL_EVERY, PRINT_INFO_EVERY, CHKPTS_PATH, SAVE_EXAMPLE_EVERY, GRAPHS_PATH, WRITE_IMG_SUMMARY_EVERY)
 
 
 def run():
@@ -26,7 +26,7 @@ def run():
     args = parser.parse_args()
     if args.out_prefix and (args.generate is None):
         parser.error("--out_prefix requires --generate")
-    if args.out_prefix == None:
+    if args.out_prefix is None:
         args.out_prefix = "output"
 
     # Seed for reproducibility
@@ -48,11 +48,12 @@ def run():
 
     ##decayed_learning_rate = learning_rate * decay_rate ^ (global_step / decay_steps)
     decaying_stdev = tf.train.exponential_decay(
-        starter_stdev, global_step, total_steps, 0.0001)
-    
+        starter_stdev, global_step, total_steps, 0.001)
+
     decaying_noise = tf.random_normal(shape=tf.shape(
         input_real), mean=0.0, stddev=decaying_stdev, dtype=tf.float32)
-    tf.summary.scalar("stdev", tf.keras.backend.std(decaying_noise), collections=["d_summ"])
+    tf.summary.scalar("stdev", tf.keras.backend.std(
+        decaying_noise), collections=["d_summ"])
     d_loss, g_loss = model.model_loss(
         input_real, input_z, decaying_noise=decaying_noise)
     d_train_opt, g_train_opt = model.model_opt(
@@ -105,7 +106,7 @@ def get_session(batch_size):
         DIM_X, DIM_Y, DIM_Z, Z_NOISE_DIM, batch_size)
     dcgan.generator(input_z)
     global_step = tf.Variable(0, trainable=False, name='global_step')
-    saver = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=1)
+    saver = tf.train.Saver(max_to_keep=10, keep_checkpoint_every_n_hours=5)
 
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
@@ -130,6 +131,7 @@ def train(sess, saver, z_batch_tensor, increment_global_step, dataset_len, itera
     next_batch = iterator.get_next()
 
     writer = tf.summary.FileWriter(BASE_PATH + GRAPHS_PATH, sess.graph)
+    g_imgs = tf.summary.merge_all(key="g_imgs")
     g_summ = tf.summary.merge_all(key="g_summ")
     d_summ = tf.summary.merge_all(key="d_summ")
 
@@ -142,12 +144,18 @@ def train(sess, saver, z_batch_tensor, increment_global_step, dataset_len, itera
             _, d_loss_sum_str = sess.run([d_train_opt, d_summ], feed_dict={
                                          input_real: batch, input_z: batch_z})
             writer.add_summary(d_loss_sum_str, steps)
+
             _, g_sum_str = sess.run([g_train_opt, g_summ], feed_dict={
-                                    input_real: batch, input_z: batch_z})
+                input_real: batch, input_z: batch_z})
             writer.add_summary(g_sum_str, steps)
+
             _, g_sum_str = sess.run([g_train_opt, g_summ], feed_dict={
-                                    input_real: batch, input_z: batch_z})
+                input_real: batch, input_z: batch_z})
+
             writer.add_summary(g_sum_str, steps)
+
+            if steps % WRITE_IMG_SUMMARY_EVERY == 0:
+                writer.add_summary(sess.run(g_imgs, feed_dict={input_z: batch_z}), steps)
 
             if steps % SAVE_MODEL_EVERY == 0:
                 saver.save(sess, BASE_PATH + CHKPTS_PATH +

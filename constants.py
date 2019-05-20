@@ -3,6 +3,7 @@ import json
 
 SEED = 12
 NUM_THREADS = 8
+WRITE_IMG_SUMMARY_EVERY = 100
 
 with open('config.json', 'r') as f:
     CONFIG_JSON = json.load(f)
