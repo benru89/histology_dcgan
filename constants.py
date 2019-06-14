@@ -23,7 +23,9 @@ DIM_Z = CONFIG['output']['dimZ']
 
 BATCH_SIZE = CONFIG['input']['batch_size']
 Z_NOISE_DIM = CONFIG['input']['z_noise_dim']
+Y_DIM = 2
 
+F_DIM = CONFIG['training']['f_dim']
 NUM_EPOCHS = CONFIG['training']['num_epochs']
 D_LEARNING_RATE = CONFIG['training']['d_learning_rate']
 G_LEARNING_RATE = CONFIG['training']['g_learning_rate']
