@@ -4,16 +4,16 @@ import os
 from os.path import isfile, join
 import tensorflow as tf
 from PIL import Image
-from constants import NUM_THREADS, DIM_X, DIM_Y, DIM_Z
+from constants import NUM_THREADS, DIM_X, DIM_Y, DIM_Z, Y_DIM
 
 
 
-def read_image(filename, channels):
+def read_image(filename, labels):
     """
     This function does blah blah.
     """
     image_string = tf.read_file(filename)
-    image = tf.image.decode_jpeg(image_string, channels=channels)
+    image = tf.image.decode_jpeg(image_string, channels=DIM_Z)
     image = tf.image.convert_image_dtype(image, tf.float32)
     
     # image = tf.image.random_flip_left_right(image)
@@ -26,32 +26,37 @@ def read_image(filename, channels):
       image = tf.squeeze(image, 0)
     image = tf.subtract(image, 0.5)
     image = tf.multiply(image, 2.0)
-    return image
+    return image, labels
 
 
 def random_rotation(image):
     k = tf.random_uniform(shape=[], minval=0, maxval=3, dtype=tf.int32)
 
     return tf.image.rot90(image, k)
-
-
-def create_dataset(path, batch_size, img_height, img_width, channels, num_epochs):
+  
+def labels_from_filenames(filenames):
+  labels = [1 if "pos" in file.split("/")[-1] else 0 for file in filenames]
+  labels_one_hot = tf.one_hot(labels, Y_DIM, 1.0, 0.0)  
+  return labels_one_hot
+  
+def create_dataset(path, batch_size, num_epochs):
     """
     This function does blah blah.
     """
     
-    convert_tiff_to_jpeg(path)
+    #convert_tiff_to_jpeg(path)
+    
     #celebA
     #filenames = glob(os.path.join(path, "*.jpeg"))
     #filenames.extend(glob(os.path.join(path, "*.jpg")))
+    
     filenames = glob(os.path.join(path, "**/*.jpeg"))
     filenames.extend(glob(os.path.join(path, "**/*.jpg")))
-    dataset = (tf.data.Dataset.from_tensor_slices((filenames))
-                .repeat(num_epochs)
-                .shuffle(buffer_size=len(filenames))
-                .map(lambda filename: read_image(
-                    filename, channels), num_parallel_calls=NUM_THREADS)
-                
+    
+    dataset = (tf.data.Dataset.from_tensor_slices((filenames, labels_from_filenames(filenames)))
+                .apply(tf.data.experimental.shuffle_and_repeat(buffer_size=len(filenames), count=num_epochs))
+                .map(lambda filename, labels: read_image(
+                    filename, labels), num_parallel_calls=NUM_THREADS)
                 .batch(batch_size)
                 .prefetch(1))
 

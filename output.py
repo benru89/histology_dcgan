@@ -3,8 +3,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from dcgan_alt import sampler
-from constants import DIM_X, DIM_Y, DIM_Z, BASE_PATH, OUTPUT_PATH, BATCH_SIZE, FULL_OUTPUT_PATH
+from constants import DIM_X, DIM_Y, DIM_Z, BASE_PATH, OUTPUT_PATH, BATCH_SIZE, FULL_OUTPUT_PATH,Y_DIM
 from PIL import Image
+import tensorflow as tf
 
 
 def image_from_array(image_arr):
@@ -19,37 +20,47 @@ def transform_image(image):
     return image
 
 
-def save_images(imgs_batch, curr_batch=1, stepcount=None, name_prefix=None):
+def save_images(imgs_batch, labels=None, curr_batch=1, stepcount=None, name_prefix=None):
     for i, image in enumerate(imgs_batch):
         filepath = FULL_OUTPUT_PATH
         if stepcount:
             filepath += str(stepcount)
         elif name_prefix:
             filepath += str(name_prefix)
-        filepath += "_" + str(curr_batch) + "_" + str(i) + '.png'
+        filepath += "_" + str(curr_batch) + "_" + str(i) + "_"
+        if labels is None:
+            labels = np.random.randint(0,2,BATCH_SIZE)
+            labels = np.eye(2)[labels]
+        filepath += "neg" if labels[i][0] == 1 else "pos"
+        filepath +='.png'
         output_image = Image.fromarray(transform_image(
             image_from_array(image)).astype(np.uint8))
         output_image.save(filepath)
 
 
-def save_tensors(z_batch, curr_batch=1, stepcount=None, name_prefix=None):
+def save_tensors(z_batch, labels=None, curr_batch=1, stepcount=None, name_prefix=None):
     for i, ex in enumerate(z_batch):
         filepath = FULL_OUTPUT_PATH
         if stepcount:
             filepath += str(stepcount)
         elif name_prefix:
             filepath += str(name_prefix)
-        filepath += "_" + str(curr_batch) + "_" + str(i) + '.txt'
+        filepath += "_" + str(curr_batch) + "_" + str(i) + "_"
+        if labels is None:
+            labels = np.random.randint(0,2,BATCH_SIZE)
+            labels = np.eye(2)[labels]
+        filepath += "neg" if labels[i][0] == 1 else "pos"
+        filepath +='.txt'
         np.savetxt(filepath, ex, fmt='%1.25f')
 
 
-def save_mosaic_output(sess, z_batch_tensor, input_z, steps, save_tensor=False):
+def save_mosaic_output(sess, z_batch_tensor, input_z, input_g_y, labels, steps, save_tensor=False):
     """
     This function does blah blah.
-    """
+    """ 
     example_z = sess.run(z_batch_tensor)
-    samples = sess.run(sampler(input_z),
-                       feed_dict={input_z: example_z})
+    samples = sess.run(sampler(input_z, input_g_y),
+                       feed_dict={input_z: example_z, input_g_y: labels})
     imgs = [img[:, :, :] for img in samples]
     figure_side = int(np.sqrt(BATCH_SIZE))
     fig, ax = plt.subplots(nrows=figure_side, ncols=figure_side)
@@ -67,30 +78,32 @@ def save_mosaic_output(sess, z_batch_tensor, input_z, steps, save_tensor=False):
     plt.close('all')
 
 
-def save_output(sess, z_batch_tensor, input_z, steps, num_samples=1, save_tensor=False):
+def save_output(sess, z_batch_tensor, input_z, input_g_y, labels, steps, num_samples=1, save_tensor=False):
     """
     This function does blah blah.
-    """
+    """       
     example_z = sess.run(z_batch_tensor)
-    samples = sess.run(sampler(input_z),
-                       feed_dict={input_z: example_z})
+    samples = sess.run(sampler(input_z, input_g_y),
+                       feed_dict={input_z: example_z, input_g_y: labels})
+    
     imgs = [img[:, :, :] for img in samples]
     if num_samples > BATCH_SIZE:
         num_samples = BATCH_SIZE
-    save_images(imgs, num_samples, stepcount=steps)
+    save_images(imgs, labels, num_samples, stepcount=steps)
     if save_tensor:
         save_tensors(example_z)
 
 
-def generate_samples(sess, z_batch_tensor, input_z, num_samples, save_tensor=False, name_prefix="output"):
+def generate_samples(sess, z_batch_tensor, input_z, input_g_y, labels, num_samples, save_tensor=False, name_prefix="output"):
     """
     This function does blah blah.
-    """
-    num_batches = num_samples // BATCH_SIZE
+    """    
+    num_batches = (num_samples // BATCH_SIZE) + 1
     for batch_count in range(num_batches):
         example_z = sess.run(z_batch_tensor)
-        samples = sess.run(sampler(input_z), feed_dict={input_z: example_z})
+        samples = sess.run(sampler(input_z, input_g_y),
+                       feed_dict={input_z: example_z, input_g_y: labels})
         imgs = [img[:, :, :] for img in samples]
-        save_images(imgs, batch_count, name_prefix=name_prefix)
+        save_images(imgs, labels, batch_count, name_prefix=name_prefix)
         if save_tensor:
-            save_tensors(example_z, batch_count, name_prefix=name_prefix)
+            save_tensors(example_z,labels, batch_count, name_prefix=name_prefix)

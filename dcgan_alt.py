@@ -1,7 +1,7 @@
 import math
 import tensorflow as tf
 import numpy as np
-from constants import BATCH_SIZE, DIM_X, DIM_Y, DIM_Z, NUM_EPOCHS
+from constants import BATCH_SIZE, DIM_X, DIM_Y, DIM_Z, NUM_EPOCHS, F_DIM
 
 
 class batch_norm(object):
@@ -91,13 +91,16 @@ def conv_out_size_same(size, stride):
     return int(math.ceil(float(size) / float(stride)))
 
 
-def discriminator(image, reuse=False,  decaying_noise=None):
-    df_dim = 64
+def discriminator(x, y, reuse=False,  decaying_noise=None):
+    df_dim = F_DIM
     with tf.variable_scope("discriminator") as scope:
         if reuse:
             scope.reuse_variables()
-        x0 = image + decaying_noise
-        h0 = lrelu(conv2d(x0, df_dim, name='d_h0_conv'))
+        x0 = x + decaying_noise
+        conv_1 = conv2d(x0, df_dim, name='d_h0_conv')
+        conv_1_concat_y = tf.concat([conv_1, tf.tile(tf.reshape(y, [-1, 1, 1, y.get_shape()[-1]]),
+                                                                [1, tf.shape(conv_1)[1], tf.shape(conv_1)[2], 1])], axis=3)
+        h0 = lrelu(conv_1_concat_y)
         h1 = lrelu(d_bn1(conv2d(h0, df_dim*2, name='d_h1_conv')))
         h2 = lrelu(d_bn2(conv2d(h1, df_dim*4, name='d_h2_conv')))
         h3 = lrelu(d_bn3(conv2d(h2, df_dim*8, name='d_h3_conv')))
@@ -106,17 +109,18 @@ def discriminator(image, reuse=False,  decaying_noise=None):
         return tf.nn.sigmoid(h4), h4
 
 
-def generator(z):
-    gf_dim = 64
+def generator(z, y):
+    gf_dim = F_DIM
     with tf.variable_scope("generator") as scope:
-
+        
         s_h, s_w = DIM_X, DIM_Y
         s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)
         s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
         s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
         s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
 
-        z_, h0_w, h0_b = linear(z, gf_dim*8*s_h16*s_w16,
+        z_y = tf.concat([z, y], axis=1)
+        z_, h0_w, h0_b = linear(z_y, gf_dim*8*s_h16*s_w16,
                                 'g_h0_lin', with_w=True)
         h0 = tf.reshape(z_, [-1, s_h16, s_w16, gf_dim * 8])
         h0 = tf.nn.relu(g_bn0(h0))
@@ -135,8 +139,8 @@ def generator(z):
         return tf.nn.tanh(h4)
 
 
-def sampler(z, batch_size=BATCH_SIZE):
-    gf_dim = 64
+def sampler(z,  y, batch_size=BATCH_SIZE):
+    gf_dim = F_DIM
     with tf.variable_scope("generator") as scope:
         scope.reuse_variables()
 
@@ -146,8 +150,9 @@ def sampler(z, batch_size=BATCH_SIZE):
         s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
         s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
 
+        z_y = tf.concat([z, y], axis=1)
         h0 = tf.reshape(
-            linear(z, gf_dim*8*s_h16*s_w16, 'g_h0_lin'),
+            linear(z_y, gf_dim*8*s_h16*s_w16, 'g_h0_lin'),
             [-1, s_h16, s_w16, gf_dim * 8])
         h0 = tf.nn.relu(g_bn0(h0, train=False))
 
