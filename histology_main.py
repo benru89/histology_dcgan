@@ -104,7 +104,7 @@ def run():
 
         elif args.image:
             start_img = Image.open(args.image)
-            img, lat_vector = latent_space.search_image(sess, start_img)
+            img, lat_vector = latent_space.search_image(sess, start_img,10000)
             img.save(BASE_PATH + OUTPUT_PATH + 'rec_output.png')
             np.save(BASE_PATH + OUTPUT_PATH + "zp_rec", lat_vector)
 

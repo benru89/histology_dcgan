@@ -6,12 +6,12 @@ from PIL import Image
 from output import transform_image, image_from_array
 
 
-def search_image(sess, image_to_search,steps):
+def search_image(sess, image_to_search,decay_steps):
     image_arr = (np.array(image_to_search) / 127.5) - 1
     
     labels = np.random.randint(0,1,1)
     labels_one_hot = tf.one_hot(labels, Y_DIM, 1.0, 0.0)  
-    zp, zp_value = search(sess, image_arr,labels_one_hot,steps)
+    zp, zp_value = search(sess, image_arr,labels_one_hot,decay_steps)
     
    
     samples = sess.run(sampler(zp,labels_one_hot,1))
@@ -21,7 +21,7 @@ def search_image(sess, image_to_search,steps):
     return img, zp_value
 
 
-def search(sess, tensor, labels_one_hot,steps,save_tensor=False):
+def search(sess, tensor, labels_one_hot,decay_steps,save_tensor=False):
     fz = tf.Variable(tensor, tf.float32)
     fz.initializer.run(session=sess)
     fz = tf.expand_dims(fz, 0)
@@ -39,11 +39,11 @@ def search(sess, tensor, labels_one_hot,steps,save_tensor=False):
     starter_learning_rate = 0.99
     learning_rate = tf.train.exponential_decay(starter_learning_rate,
                                                descent_step,
-                                               steps, 0.5)
+                                               decay_steps, 0.05)
     opt = tf.train.GradientDescentOptimizer(learning_rate)
     # Optimize on the variable zp
     train = opt.minimize(loss, var_list=zp, global_step=descent_step)
-    for i in range(steps):
+    for i in range(decay_steps):
         _, loss_value, zp_val, eta = sess.run((train, loss, zp, learning_rate))
         print("%03d) eta=%03f, loss = %f" % (i, eta, loss_value))
 
