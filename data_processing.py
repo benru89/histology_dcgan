@@ -1,4 +1,7 @@
-"""This module does blah blah."""
+"""
+This module performs pre-processing on the images
+that serve as input to the neural network.
+"""
 from glob import glob
 import os
 from os.path import isfile, join
@@ -10,7 +13,7 @@ from constants import NUM_THREADS, DIM_X, DIM_Y, DIM_Z, Y_DIM
 
 def read_image(filename, labels):
     """
-    This function does blah blah.
+    This function reads and resizes the image.
     """
     image_string = tf.read_file(filename)
     image = tf.image.decode_jpeg(image_string, channels=DIM_Z)
@@ -30,18 +33,28 @@ def read_image(filename, labels):
 
 
 def random_rotation(image):
+    """
+    This function adds random rotation for dataset augmentation.
+    """
     k = tf.random_uniform(shape=[], minval=0, maxval=3, dtype=tf.int32)
 
     return tf.image.rot90(image, k)
   
+    
 def labels_from_filenames(filenames):
+  """
+  This function returns the data labels in one-hot format.
+  """
   labels = [1 if "pos" in file.split("/")[-1] else 0 for file in filenames]
   labels_one_hot = tf.one_hot(labels, Y_DIM, 1.0, 0.0)  
   return labels_one_hot
   
+    
 def create_dataset(path, batch_size, num_epochs):
     """
-    This function does blah blah.
+    This function creates a dataset from a path
+    batch_size: number of samples before updating weights
+    num_epochs: number of times to go through the entire dataset
     """
     
     #convert_tiff_to_jpeg(path)
@@ -64,7 +77,9 @@ def create_dataset(path, batch_size, num_epochs):
 
 
 def extract_patches(image, patch_size):
-    """extract square patches of 'patch_size' from the image"""
+    """ 
+    This function extracts square patches of 'patch_size' from the image
+    """
 
     height = patch_size
     width = patch_size
@@ -83,7 +98,7 @@ def extract_patches(image, patch_size):
 
 def convert_tiff_to_jpeg(path):
     """
-    This function does blah blah.
+    This function converts .tif or .png to .jpg image format.
     """
     filenames = [f for f in os.listdir(path) if isfile(join(path, f))]
     for filename in filenames:
